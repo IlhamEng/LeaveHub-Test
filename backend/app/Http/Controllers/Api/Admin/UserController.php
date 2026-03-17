@@ -12,31 +12,7 @@ use Illuminate\Http\JsonResponse;
 class UserController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/admin/users",
-     *     summary="List all users",
-     *     description="Get list of all users (admin only)",
-     *     operationId="adminListUsers",
-     *     tags={"Admin - User Management"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Success",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="Daftar user berhasil diambil."),
-     *             @OA\Property(property="data", type="array", @OA\Items(
-     *                 @OA\Property(property="id", type="integer"),
-     *                 @OA\Property(property="name", type="string"),
-     *                 @OA\Property(property="email", type="string"),
-     *                 @OA\Property(property="role", type="string"),
-     *                 @OA\Property(property="created_at", type="string"),
-     *                 @OA\Property(property="updated_at", type="string")
-     *             ))
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Forbidden")
-     * )
+     * List all users.
      */
     public function index(): JsonResponse
     {
@@ -49,44 +25,10 @@ class UserController extends Controller
     }
 
     /**
-     * @OA\Post(
-     *     path="/admin/users",
-     *     summary="Create new user",
-     *     description="Create a new user with role 'user'. Maximum 2 users allowed. Leave balances auto-assigned.",
-     *     operationId="adminCreateUser",
-     *     tags={"Admin - User Management"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"name","email","password"},
-     *             @OA\Property(property="name", type="string", example="John Doe"),
-     *             @OA\Property(property="email", type="string", format="email", example="john@example.com"),
-     *             @OA\Property(property="password", type="string", example="password123")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="User created successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="User berhasil dibuat."),
-     *             @OA\Property(property="data", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(
-     *         response=422,
-     *         description="Validation error or max users reached",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string")
-     *         )
-     *     )
-     * )
+     * Create a new user. Max 2 users validation. Auto-assign leave balances.
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
-        // Check max 2 users
         if (User::count() >= 2) {
             return response()->json([
                 'message' => 'Maksimal hanya boleh ada 2 user. Tidak bisa menambah user baru.',
@@ -122,47 +64,17 @@ class UserController extends Controller
     }
 
     /**
-     * @OA\Put(
-     *     path="/admin/users/{id}",
-     *     summary="Update user",
-     *     description="Update user data (admin only)",
-     *     operationId="adminUpdateUser",
-     *     tags={"Admin - User Management"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="User ID",
-     *         @OA\Schema(type="integer")
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="name", type="string", example="John Updated"),
-     *             @OA\Property(property="email", type="string", format="email", example="john.updated@example.com"),
-     *             @OA\Property(property="password", type="string", example="newpassword123")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="User updated successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="User berhasil diperbarui."),
-     *             @OA\Property(property="data", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(response=404, description="User not found"),
-     *     @OA\Response(response=422, description="Validation error")
-     * )
+     * Update user data.
      */
-    public function update(UpdateUserRequest $request, int $user): JsonResponse
+    public function update(UpdateUserRequest $request, int $id): JsonResponse
     {
-        $userModel = User::findOrFail($user);
+        $userModel = User::findOrFail($id);
 
         $data = $request->only(['name', 'email', 'password']);
+
+        // Remove empty/null values so we don't overwrite with nothing
+        $data = array_filter($data, fn($value) => !is_null($value) && $value !== '');
+
         $userModel->update($data);
 
         return response()->json([

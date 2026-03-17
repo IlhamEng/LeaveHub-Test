@@ -35,7 +35,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Admin - User Management
         Route::get('/users', [AdminUserController::class, 'index']);
         Route::post('/users', [AdminUserController::class, 'store']);
-        Route::put('/users/{user}', [AdminUserController::class, 'update']);
+        Route::put('/users/{id}', [AdminUserController::class, 'update']);
 
         // Admin - Leave Request Management
         Route::get('/leave-requests', [AdminLeaveRequestController::class, 'index']);

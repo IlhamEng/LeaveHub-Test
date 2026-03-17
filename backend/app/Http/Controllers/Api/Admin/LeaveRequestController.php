@@ -11,24 +11,7 @@ use Illuminate\Http\Request;
 class LeaveRequestController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/admin/leave-requests",
-     *     summary="View all leave requests",
-     *     description="Get all leave requests from all users (admin only)",
-     *     operationId="adminListLeaveRequests",
-     *     tags={"Admin - Leave Request"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Success",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Forbidden")
-     * )
+     * View all leave requests from all users.
      */
     public function index(): JsonResponse
     {
@@ -43,33 +26,7 @@ class LeaveRequestController extends Controller
     }
 
     /**
-     * @OA\Patch(
-     *     path="/admin/leave-requests/{id}/approve",
-     *     summary="Approve leave request",
-     *     description="Approve a pending leave request (admin only). Deducts user's leave balance.",
-     *     operationId="adminApproveLeaveRequest",
-     *     tags={"Admin - Leave Request"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\RequestBody(
-     *         required=false,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="admin_notes", type="string", example="Disetujui, selamat berlibur.")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Request approved",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(response=404, description="Not found"),
-     *     @OA\Response(response=422, description="Cannot approve")
-     * )
+     * Approve a pending leave request. Deducts user's leave balance.
      */
     public function approve(Request $request, int $id): JsonResponse
     {
@@ -84,7 +41,7 @@ class LeaveRequestController extends Controller
         // Deduct balance
         $balance = LeaveBalance::where('user_id', $leaveRequest->user_id)
             ->where('leave_type_id', $leaveRequest->leave_type_id)
-            ->where('year', $leaveRequest->start_date->year)
+            ->where('year', \Carbon\Carbon::parse($leaveRequest->start_date)->year)
             ->first();
 
         if (!$balance) {
@@ -116,26 +73,7 @@ class LeaveRequestController extends Controller
     }
 
     /**
-     * @OA\Patch(
-     *     path="/admin/leave-requests/{id}/reject",
-     *     summary="Reject leave request",
-     *     description="Reject a pending leave request (admin only). Balance unchanged.",
-     *     operationId="adminRejectLeaveRequest",
-     *     tags={"Admin - Leave Request"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\RequestBody(
-     *         required=false,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="admin_notes", type="string", example="Ditolak karena kebutuhan proyek.")
-     *         )
-     *     ),
-     *     @OA\Response(response=200, description="Request rejected"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(response=404, description="Not found"),
-     *     @OA\Response(response=422, description="Cannot reject")
-     * )
+     * Reject a pending leave request. Balance unchanged.
      */
     public function reject(Request $request, int $id): JsonResponse
     {
@@ -161,26 +99,12 @@ class LeaveRequestController extends Controller
     }
 
     /**
-     * @OA\Delete(
-     *     path="/admin/leave-requests/{id}",
-     *     summary="Soft delete leave request",
-     *     description="Soft delete a final-status leave request (approved, rejected, cancelled). Admin only.",
-     *     operationId="adminDeleteLeaveRequest",
-     *     tags={"Admin - Leave Request"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Request deleted"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Forbidden"),
-     *     @OA\Response(response=404, description="Not found"),
-     *     @OA\Response(response=422, description="Cannot delete")
-     * )
+     * Soft delete a final-status leave request (admin only).
      */
     public function destroy(Request $request, int $id): JsonResponse
     {
         $leaveRequest = LeaveRequest::findOrFail($id);
 
-        // Admin can only soft delete final-status requests
         if ($leaveRequest->isPending()) {
             return response()->json([
                 'message' => 'Tidak bisa menghapus pengajuan cuti yang masih berstatus pending. Harus di-cancel atau diproses terlebih dahulu.',

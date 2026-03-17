@@ -13,23 +13,7 @@ use Illuminate\Http\Request;
 class LeaveRequestController extends Controller
 {
     /**
-     * @OA\Get(
-     *     path="/leave-requests",
-     *     summary="View own leave requests",
-     *     description="Get current user's leave request history (non-deleted)",
-     *     operationId="viewLeaveRequests",
-     *     tags={"User - Leave Request"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Response(
-     *         response=200,
-     *         description="Success",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthenticated")
-     * )
+     * View own leave request history.
      */
     public function index(Request $request): JsonResponse
     {
@@ -45,34 +29,7 @@ class LeaveRequestController extends Controller
     }
 
     /**
-     * @OA\Post(
-     *     path="/leave-requests",
-     *     summary="Submit leave request",
-     *     description="Submit a new leave request. Validates quota and overlap.",
-     *     operationId="submitLeaveRequest",
-     *     tags={"User - Leave Request"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"leave_type_id","start_date","end_date","reason"},
-     *             @OA\Property(property="leave_type_id", type="integer", example=1),
-     *             @OA\Property(property="start_date", type="string", format="date", example="2026-04-01"),
-     *             @OA\Property(property="end_date", type="string", format="date", example="2026-04-03"),
-     *             @OA\Property(property="reason", type="string", example="Liburan keluarga")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=201,
-     *         description="Leave request created",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=422, description="Validation error")
-     * )
+     * Submit a new leave request.
      */
     public function store(StoreLeaveRequestRequest $request): JsonResponse
     {
@@ -136,40 +93,18 @@ class LeaveRequestController extends Controller
     }
 
     /**
-     * @OA\Patch(
-     *     path="/leave-requests/{id}/cancel",
-     *     summary="Cancel own leave request",
-     *     description="Cancel a pending leave request owned by the current user",
-     *     operationId="cancelLeaveRequest",
-     *     tags={"User - Leave Request"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Request cancelled",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string"),
-     *             @OA\Property(property="data", type="object")
-     *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Not your request"),
-     *     @OA\Response(response=404, description="Not found"),
-     *     @OA\Response(response=422, description="Cannot cancel")
-     * )
+     * Cancel own pending leave request.
      */
     public function cancel(Request $request, int $id): JsonResponse
     {
         $leaveRequest = LeaveRequest::findOrFail($id);
 
-        // Check ownership
         if ($leaveRequest->user_id !== $request->user()->id) {
             return response()->json([
                 'message' => 'Anda tidak memiliki akses ke pengajuan cuti ini.',
             ], 403);
         }
 
-        // Check status
         if (!$leaveRequest->isPending()) {
             return response()->json([
                 'message' => 'Hanya pengajuan cuti berstatus pending yang bisa dibatalkan.',
@@ -187,33 +122,18 @@ class LeaveRequestController extends Controller
     }
 
     /**
-     * @OA\Delete(
-     *     path="/leave-requests/{id}",
-     *     summary="Soft delete own leave request",
-     *     description="Soft delete own cancelled or rejected leave request",
-     *     operationId="deleteLeaveRequest",
-     *     tags={"User - Leave Request"},
-     *     security={{"bearerAuth":{}}},
-     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
-     *     @OA\Response(response=200, description="Request deleted"),
-     *     @OA\Response(response=401, description="Unauthenticated"),
-     *     @OA\Response(response=403, description="Not your request"),
-     *     @OA\Response(response=404, description="Not found"),
-     *     @OA\Response(response=422, description="Cannot delete")
-     * )
+     * Soft delete own cancelled or rejected leave request.
      */
     public function destroy(Request $request, int $id): JsonResponse
     {
         $leaveRequest = LeaveRequest::findOrFail($id);
 
-        // Check ownership
         if ($leaveRequest->user_id !== $request->user()->id) {
             return response()->json([
                 'message' => 'Anda tidak memiliki akses ke pengajuan cuti ini.',
             ], 403);
         }
 
-        // User can only soft delete cancelled or rejected requests
         if (!in_array($leaveRequest->status, [LeaveRequest::STATUS_CANCELED, LeaveRequest::STATUS_REJECTED])) {
             return response()->json([
                 'message' => 'User hanya bisa menghapus pengajuan cuti yang berstatus cancelled atau rejected.',
