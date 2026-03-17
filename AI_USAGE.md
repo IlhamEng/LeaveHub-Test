@@ -1,6 +1,6 @@
 # AI Usage Documentation
 
-File ini mendokumentasikan penggunaan AI (Model: **Google DeepMind Antigravity / Gemini**) beserta *tools* dan *prompts* yang dijalankan untuk mengembangkan sistem backend **Leave Request Management** (Laravel 12, PostgreSQL).
+File ini mendokumentasikan penggunaan AI (Model: **Google DeepMind Antigravity / Gemini 3.0 Pro/Claude 4.6 Sonnet**) beserta *tools* dan *prompts* yang dijalankan untuk mengembangkan sistem  **Leave Request Management** (Laravel 12,Vue 3,PostgreSQL).
 
 ---
 
