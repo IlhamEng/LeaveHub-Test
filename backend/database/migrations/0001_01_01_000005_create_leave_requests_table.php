@@ -29,8 +29,10 @@ return new class extends Migration
             $table->softDeletes();
         });
 
-        // Add CHECK constraint for valid dates
-        DB::statement('ALTER TABLE leave_requests ADD CONSTRAINT valid_dates CHECK (start_date <= end_date)');
+        // Add CHECK constraint for valid dates (PostgreSQL only)
+        if (DB::connection()->getDriverName() === 'pgsql') {
+            DB::statement('ALTER TABLE leave_requests ADD CONSTRAINT valid_dates CHECK (start_date <= end_date)');
+        }
     }
 
     /**
