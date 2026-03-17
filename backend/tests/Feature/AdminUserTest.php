@@ -74,7 +74,7 @@ class AdminUserTest extends TestCase
 
     public function test_admin_cannot_create_more_than_2_users(): void
     {
-        // Create first additional user (total: admin + 1 = 2)
+        // Create first user (role=user count: 1)
         $this->withHeaders($this->authHeader())
             ->postJson('/api/admin/users', [
                 'name' => 'User One',
@@ -83,11 +83,20 @@ class AdminUserTest extends TestCase
             ])
             ->assertStatus(201);
 
-        // Try creating third user (total would be 3)
-        $response = $this->withHeaders($this->authHeader())
+        // Create second user (role=user count: 2)
+        $this->withHeaders($this->authHeader())
             ->postJson('/api/admin/users', [
                 'name' => 'User Two',
                 'email' => 'user2@example.com',
+                'password' => 'password123',
+            ])
+            ->assertStatus(201);
+
+        // Try creating third user (role=user count would be 3 → blocked)
+        $response = $this->withHeaders($this->authHeader())
+            ->postJson('/api/admin/users', [
+                'name' => 'User Three',
+                'email' => 'user3@example.com',
                 'password' => 'password123',
             ]);
 

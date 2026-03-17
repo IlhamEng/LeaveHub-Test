@@ -16,7 +16,7 @@ class UserController extends Controller
      */
     public function index(): JsonResponse
     {
-        $users = User::all();
+        $users = User::where('role', 'user')->get();
 
         return response()->json([
             'message' => 'Daftar user berhasil diambil.',
@@ -29,7 +29,7 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
-        if (User::count() >= 2) {
+        if (User::where('role', 'user')->count() >= 2) {
             return response()->json([
                 'message' => 'Maksimal hanya boleh ada 2 user. Tidak bisa menambah user baru.',
             ], 422);
